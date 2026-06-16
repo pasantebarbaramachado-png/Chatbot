@@ -6,7 +6,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 app = Flask(__name__)
 ai_client = genai.Client()
 
-@app.route("/webhook", methods=["POST"])
+@app.route("/", methods=["POST"])
 def webhook():
     mensaje_usuario = request.values.get('Body', '')
     try:
