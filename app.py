@@ -1,15 +1,21 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from google import genai
-from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
 ai_client = genai.Client()
 
-@app.route("/", methods=["POST"])
-def webhook():
-    mensaje_usuario = request.values.get('Body', '')
+@app.route("/chat", methods=["POST"])
+def chat():
+    # Recibe los datos directamente del mensaje enviado
+    data = request.json or {}
+    mensaje_usuario = data.get('message', '')
+    
+    if not mensaje_usuario:
+        return jsonify({"reply": "No se recibió ningún mensaje."}), 400
+
     try:
+        # Gemini procesa la respuesta
         response = ai_client.models.generate_content(
             model='gemini-2.5-flash',
             contents=mensaje_usuario
@@ -18,9 +24,8 @@ def webhook():
     except Exception as e:
         respuesta_bot = "Lo siento, tuve un problema al procesar tu mensaje."
 
-    twilio_response = MessagingResponse()
-    twilio_response.message(respuesta_bot)
-    return str(twilio_response)
+    return jsonify({"reply": respuesta_bot})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
